@@ -11,7 +11,7 @@ tcp_=(21 22 15)
 udp_=(22)
 icmp=()
 
-# function user_settings(){
+function user_settings(){
     echo "extranet: $exif:$exip"
     echo "---------"
     echo "intranet: $inif:$inip"
@@ -42,6 +42,6 @@ icmp=()
         done
     echo "icmp done"
     echo "---------"
+}
 
-
-# }
+user_settings

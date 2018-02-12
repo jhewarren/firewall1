@@ -14,6 +14,13 @@ icmp_="0,8"
 drop_="23"
 like_its_hot="DROP"
 
+#TODO For FTP and SSH services, set control connections to "Minimum Delay" and FTP data
+to "Maximum Throughput".
+function nat_setup(){
+	#TODO ifconfig config stuff
+	#TODO route config stuff
+}
+
 function reset(){
 	$IPT -F
 	$IPT -X
@@ -40,15 +47,20 @@ function drop{
 	#Drop connections that are coming the “wrong” way (i.e., inbound SYN packets to high ports).
 	#TODO how high is high?
 
+	#Drop all packets destined for the firewall host from the outside.
+	#TODO
+
 	#Drop all TCP packets with the SYN and FIN bit set.
 	$IPT -A FORWARD -i $inif -o $exif --tcp-flag SYN,FIN SYN,FIN -j no_chain
 	$IPT -A FORWARD -o $inif -i $exif --tcp-flag SYN,FIN SYN,FIN -j no_chain
 	
-	#Block all external traffic directed to ports 32768 – 32775, 137 – 139, TCP ports 111 and 515.
+	#Block all external traffic directed to TCP ports 32768 – 32775, 137 – 139
 	$IPT -A FORWARD -o $exif -i $inif -p tcp --dport 32755:32768 -j no_chain
 	$IPT -A FORWARD -o $exif -i $inif -p tcp --dport 137:139 -j no_chain
+	#Block all external traffic directed to UDP ports 32768 – 32775, 137 – 139
 	$IPT -A FORWARD -o $exif -i $inif -p udp --dport 32755:32768 -j no_chain
 	$IPT -A FORWARD -o $exif -i $inif -p udp --dport 137:139 -j no_chain
+	#Block all external traffic directed to TCP ports 111 and 515.
 	$IPT -A FORWARD -o $exif -i $inif -p tcp -m multiport --dport 111,515 -j no_chain
 
 	#Drop fragments from new connections

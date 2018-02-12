@@ -1,6 +1,6 @@
-echo 'Enter IP'
-read ip
-test="hping3 $ip -V"
+#Usage ./test <IP of target>
+
+test="hping3 $1 -V"
 
 #SYN FIN test
 $test -c 1 -s 1000 -p 80 -SF &

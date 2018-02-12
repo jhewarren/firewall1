@@ -1,38 +1,30 @@
 #!/bin/bash
 
-# define user parameters
-IPT="/sbin/$IPT"
-## internet
-exif="en0"
-exip="10.100.5.0/24"
-## internal
-inif="enp0s8"
-inip="192.168.10.0/24"
-tcp_="15,21,22,53,80,443"
-udp_="22"
-icmp_="0,8"
-drop_="23"
-like_its_hot="DROP"
+source config.sh
 
-#TODO For FTP and SSH services, set control connections to "Minimum Delay" and FTP data
-to "Maximum Throughput".
+#TODO For FTP and SSH services, set control connections to "Minimum Delay" and FTP data to "Maximum Throughput". 
+
+#Set up nat and route settings
 function nat_setup(){
-	#TODO ifconfig config stuff
-	#TODO route config stuff
+	#TODO ifconfig stuff
+	#TODO route stuff
 }
 
+#Delete all privious chains and rules
 function reset(){
 	$IPT -F
 	$IPT -X
 	$IPT -Z
 }
 
+#Set all chains to DROP as default so we can set up a whitelist
 function default(){
-	$IPT --policy INPUT $like_its_hot
-	$IPT --policy FORWARD $like_its_hot
-	$IPT --policy OUTPUT $like_its_hot
+	$IPT --policy INPUT DROP
+	$IPT --policy FORWARD DROP 
+	$IPT --policy OUTPUT DROP
 }
 
+#Create all user chains
 function chain(){
 	$IPT -N tcp_chain
 	$IPT -N udp_chain
@@ -44,13 +36,13 @@ function drop{
 	#Do not accept any packets with a source address from the outside matching your internal network.
 	$IPT -A FORWARD -i $exif -s $inip -j no_chain
 
-	#Drop connections that are coming the “wrong” way (i.e., inbound SYN packets to high ports).
+	#DROP connections that are coming the “wrong” way (i.e., inbound SYN packets to high ports).
 	#TODO how high is high?
 
-	#Drop all packets destined for the firewall host from the outside.
+	#DROP all packets destined for the firewall host from the outside.
 	#TODO
 
-	#Drop all TCP packets with the SYN and FIN bit set.
+	#DROP all TCP packets with the SYN and FIN bit set.
 	$IPT -A FORWARD -i $inif -o $exif --tcp-flag SYN,FIN SYN,FIN -j no_chain
 	$IPT -A FORWARD -o $inif -i $exif --tcp-flag SYN,FIN SYN,FIN -j no_chain
 	

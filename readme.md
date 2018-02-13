@@ -40,6 +40,20 @@ inbound vs outbound behaviour
 ## script1 - configuration
 
 ## script2 - Testing
+the premise here is that 3 pcs are involved
+1 - the pc running the script from the external network
+2 - the 'sample' client on the internal network
+3 - the firewall (which, in effect, by design, serves as the bridge between the external and internal networks)
+
+We need to test both the server and internal client vulnerabilities
+the tests, thereby need to run against both.
+
+### test firewall vulnerability
+NOTHING should get in
+
+### test client vulnerability
+prescribed ports ONLY get in
+specified safeguards should be confirmed
 
 ## user configuration
 get config <filename>

@@ -2,17 +2,11 @@
 
 source config.sh
 
-#TODO For FTP and SSH services, set control connections to "Minimum Delay" and FTP data to "Maximum Throughput".
-# http://www.tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.cookbook.interactive-prio.html
-#TODO add prefix to log entry based on rule applied
-# https://www.thegeekstuff.com/2012/08/iptables-log-packets/?utm_source=feedburner
-
 # backup existing network settings
 function netbackup(){
 	mkdir ~/bak
 	iptables-save > ~/bak/iptables.bak
 	cp /etc/sysconfig/network-scripts/ifcfg* ~/bak/*.bak
-	
 }
 
 #Set up nat and route settings
@@ -38,6 +32,15 @@ function default(){
 	$IPT --policy INPUT DROP
 	$IPT --policy FORWARD DROP
 	$IPT --policy OUTPUT DROP
+
+	$IPT -A PREROUTING -t mangle -p tcp --dport 20 -j TOS --set-tos Maximize-Throughput
+	$IPT -A PREROUTING -t mangle -p tcp --sport 20 -j TOS --set-tos Maximize-Throughput
+
+	$IPT -A PREROUTING -t mangle -p tcp --dport 21 -j TOS --set-tos Minimize-Delay
+	$IPT -A PREROUTING -t mangle -p tcp --sport 21 -j TOS --set-tos Minimize-Delay
+
+	$IPT -A PREROUTING -t mangle -p tcp --dport 22 -j TOS --set-tos Minimize-Delay
+	$IPT -A PREROUTING -t mangle -p tcp --sport 22 -j TOS --set-tos Minimize-Delay
 }
 
 #Create all user chains
@@ -53,10 +56,7 @@ function drop{
 	$IPT -A FORWARD -i $exif -s $inip -j no_chain
 
 	#DROP connections that are coming the “wrong” way (i.e., inbound SYN packets to high ports).
-	#TODO how high is high?
-
-	#DROP all packets destined for the firewall host from the outside.
-	#TODO
+	$IPT -A FORWARD -p tcp -i $exif -o $inip --dport 1024: --tcp-flag SYN SYN -j no_chain
 
 	#DROP all TCP packets with the SYN and FIN bit set.
 	$IPT -A FORWARD -i $inif -o $exif --tcp-flag SYN,FIN SYN,FIN -j no_chain

@@ -85,6 +85,7 @@ function drop{
 		$IPT -A FORWARD -o $inif -i $exif -p udp --sport $i -j no_chain
 	done
 
+	$IPT -A no_chain -m limit --limit 10/min -j LOG --log-prefix "Firewall-dropped: " --log-level 4
 	$IPT -A no_chain -j DROP
 }
 

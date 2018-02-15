@@ -23,8 +23,8 @@ function nat_setup(){
 	route add -net 192.168.0.0 netmask 255.255.255.0 gw 192.168.0.100
 	route add -net $insub gw $infw
 
-	$IPT -t nat -A POSTROUTING -j SNAT -s $insub -o $exif --to-source $fw_public_ip
-	$IPT -t nat -A PREROUTING -p tcp -i $exif --dport 22 -j DNAT --to-destination $inpc:22
+	$IPT -t nat -A POSTROUTING -j SNAT -s $insub -o $exif -m state --state NEW,ESTABLISHED --to-source $fw_public_ip
+	$IPT -t nat -A PREROUTING -p tcp -i $exif -m state --state NEW,ESTABLISHED -j DNAT --to-destination $inpc
 }
 
 function restore(){
@@ -59,29 +59,28 @@ function default(){
 
 function drop(){
 	#Do not accept any packets with a source address from the outside matching your internal network.
-	#$IPT -A FORWARD -i $exif -s $inip -j no_chain
+	$IPT -A FORWARD -i $exif -s $insub -j no_chain
 
 	#DROP connections that are coming the “wrong” way (i.e., inbound SYN packets to high ports).
-	#$IPT -A FORWARD -p tcp -i $exif -o $inif --dport 1024: --tcp-flag SYN SYN -j no_chain
+	$IPT -A FORWARD -p tcp -i $exif -o $inif --dport 1024: --tcp-flag SYN SYN -j no_chain
 
 	#DROP all TCP packets with the SYN and FIN bit set.
-	#$IPT -A FORWARD -p tcp -i $inif -o $exif --tcp-flag SYN,FIN SYN,FIN -j no_chain
-	#$IPT -A FORWARD -p tcp -o $inif -i $exif --tcp-flag SYN,FIN SYN,FIN -j no_chain
+	$IPT -A FORWARD -p tcp --tcp-flag SYN,FIN SYN,FIN -j no_chain
 
 	#Block all external traffic directed to TCP ports 32768 – 32775, 137 – 139
-	#$IPT -A FORWARD -o $exif -i $inif -p tcp --dport 32755:32768 -j no_chain
-	#$IPT -A FORWARD -o $exif -i $inif -p tcp --dport 137:139 -j no_chain
+	$IPT -A FORWARD -o $exif -i $inif -p tcp --dport 32755:32768 -j no_chain
+	$IPT -A FORWARD -o $exif -i $inif -p tcp --dport 137:139 -j no_chain
 	#Block all external traffic directed to UDP ports 32768 – 32775, 137 – 139
-	#$IPT -A FORWARD -o $exif -i $inif -p udp --dport 32755:32768 -j no_chain
-	#$IPT -A FORWARD -o $exif -i $inif -p udp --dport 137:139 -j no_chain
+	$IPT -A FORWARD -o $exif -i $inif -p udp --dport 32755:32768 -j no_chain
+	$IPT -A FORWARD -o $exif -i $inif -p udp --dport 137:139 -j no_chain
 	#Block all external traffic directed to TCP ports 111 and 515.
-	#$IPT -A FORWARD -o $exif -i $inif -p tcp -m multiport --dport 111,515 -j no_chain
+	$IPT -A FORWARD -o $exif -i $inif -p tcp -m multiport --dport 111,515 -j no_chain
 
 	#Drop fragments from new connections
-	#$IPT -A FORWARD -p tcp -i $exif -o $inif -m state --state NEW -f -j no_chain
-	#$IPT -A FORWARD -p tcp -o $exif -i $inif -m state --state NEW -f -j no_chain
-	#$IPT -A FORWARD -p udp -i $exif -o $inif -m state --state NEW -f -j no_chain
-	#$IPT -A FORWARD -p udp -o $exif -i $inif -m state --state NEW -f -j no_chain
+	$IPT -A FORWARD -p tcp -i $exif -o $inif -m state --state NEW -f -j no_chain
+	$IPT -A FORWARD -p tcp -o $exif -i $inif -m state --state NEW -f -j no_chain
+	$IPT -A FORWARD -p udp -i $exif -o $inif -m state --state NEW -f -j no_chain
+	$IPT -A FORWARD -p udp -o $exif -i $inif -m state --state NEW -f -j no_chain
 
 	#User specified
 	for i in $drop_; do

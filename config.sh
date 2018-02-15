@@ -25,7 +25,10 @@ export inif="enp3s2"
 #export inip="192.168.1.0/24"
 #export firewall_ip="192.168.1.1"
 	#ports
-	export tcp_="15 21 22 53 80 443"
-	export udp_="22"
+	export tcp_="22 80 443"
+	export udp_="53 67 68"
 	export icmp_="0 8"
-	export drop_="23"
+	export drop_="23" #user specific
+	export tcp_deny="23 111 137 138 139 515 32768 32771 32775"
+	export udp_deny="23 111 137 138 139 515 32768 32771 32775"
+	export icmp_deny="200"

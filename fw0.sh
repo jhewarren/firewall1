@@ -47,6 +47,8 @@ function default(){
 
 	$IPT -A udp_chain -j ACCEPT
 
+	$IPT -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+	
 	$IPT -A PREROUTING -t mangle -p tcp --dport 20 -j TOS --set-tos Maximize-Throughput
 	$IPT -A PREROUTING -t mangle -p tcp --sport 20 -j TOS --set-tos Maximize-Throughput
 

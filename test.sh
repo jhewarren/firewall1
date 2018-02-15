@@ -30,7 +30,7 @@ done
 
 echo 'ICMP allowed ports'
 for i in $icmp_; do
-	$test -S -p $i -2 -c 1 >> test_result
+	$test -S -p $i -1 -c 1 >> test_result
 	if [  $? -eq 0 ]; then
 	    echo "$ip:$i is open and ${grn}PASSED${end}"
 	else

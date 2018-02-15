@@ -41,12 +41,22 @@ inbound vs outbound behaviour
 
 ## script2 - Testing
 the premise here is that 3 pcs are involved
-1 - the pc running the script from the external network
-2 - the 'sample' client on the internal network
-3 - the firewall (which, in effect, by design, serves as the bridge between the external and internal networks)
+for this assignment we shall refer to them as TEST, FIREWALL(FW) and CLIENT
+TEST: the pc running the script from the external network
+CLIENT: the 'sample' client on the internal network
+FW: the firewall (which, in effect, by design, serves as the bridge between the external and internal networks)
 
 We need to test both the server and internal client vulnerabilities
 the tests, thereby need to run against both.
+
+### preparatory testing
+1. ensure scripts configure each machine correctly.
+TEST: en01 only, CLIENT: enp3s2 only, FW: both cards
+all ports open on all machines
+test basic connectivity
+run test scripts
+
+2. shut down all ports
 
 ### test firewall vulnerability
 NOTHING should get in

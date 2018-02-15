@@ -14,22 +14,25 @@ function set_client_firewall(){
 }
 
 function set_client_if(){
-    echo IN: $inif $client_ip $insub.0/24
+    echo IN: $inif $inpc $exif $insub
 
     ifconfig $exif down
 
-    ip addr add $client_ip dev $inif
-    ip link set $inif up
-    echo "1" > /proc/sys/net/ipv4/ip_forward
-    ip route add $insub.0/24 via $inip dev $inif
+    ifconfig $inif $inpc up
     route add default gw $infw
+#    route add $insub via $infw dev $inif
+ #    ifconfig $inif up
+
+	    echo "nameserver 8.8.8.8" > /etc/resolv.conf
 }
 
-
 function restore_client(){
+    ip route del default
+    ip route del 192.168.10.0/24
     ifconfig $inif down
+    ifconfig $exif $exfw
     ifconfig $exif up
-    ip route add $exsub.0/24 via $exip dev $exif
+    ip route add $exsub via 192.168.0.100 dev $exif
     route add default gw $exfw
 }
 

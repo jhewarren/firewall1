@@ -17,20 +17,14 @@ function nat_setup(){
 	ifconfig $inif up
 	ifconfig $inif $infw netmask 255.255.255.0
 
-    echo "1" > /proc/sys/net/ipv4/ip_forward
-	echo "nameserver 8.8.8.8" > /etc/resolv.config
+    sudo echo "1" > /proc/sys/net/ipv4/ip_forward
+	sudo echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
-	route add -net 192.168.0.0 netmask 255.255.255.0 gw 192.168.0.100
+	#route add -net 192.168.0.0 netmask 255.255.255.0 gw 192.168.0.100
 	route add -net $insub gw $infw
 
 	$IPT -t nat -A POSTROUTING -j SNAT -s $insub -o $exif -m state --state NEW,ESTABLISHED --to-source $fw_public_ip
 	$IPT -t nat -A PREROUTING -p tcp -i $exif -m state --state NEW,ESTABLISHED -j DNAT --to-destination $inpc
-}
-
-function restore(){
-	ip link set $inif down
-	ip link set $exif up
-	iptables-restore < ~/bak/iptables.bak
 }
 
 #Delete all privious chains and rules
@@ -45,10 +39,6 @@ function default(){
 	$IPT --policy FORWARD DROP
 	$IPT --policy OUTPUT DROP
 
-	$IPT -A udp_chain -j ACCEPT
-
-	$IPT -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-	
 	$IPT -A PREROUTING -t mangle -p tcp --dport 20 -j TOS --set-tos Maximize-Throughput
 	$IPT -A PREROUTING -t mangle -p tcp --sport 20 -j TOS --set-tos Maximize-Throughput
 
@@ -105,8 +95,9 @@ function chain(){
 }
 
 function tcp(){
-	echo "TCP ports"
+	
 	for i in $tcp_; do
+		echo "TCP port $i allowed"
 		$IPT -A FORWARD -p tcp -m tcp --dport $i -m state --state NEW,ESTABLISHED -j tcp_chain
 		$IPT -A FORWARD -p tcp -m tcp --sport $i -m state --state NEW,ESTABLISHED -j tcp_chain
 	done
@@ -116,12 +107,15 @@ function tcp(){
 }
 
 function udp(){
-	echo "udp types"
 	for i in $udp_; do
+		echo "UDP port $i allowed"
 		$IPT -A FORWARD -p udp --dport $i -m state --state NEW,ESTABLISHED -j udp_chain
 		$IPT -A FORWARD -p udp --sport $i -m state --state NEW,ESTABLISHED -j udp_chain
+		#$IPT -A FORWARD -p udp --dport $i -m conntrack --ctstate NEW -j udp_chain
+		#$IPT -A FORWARD -p udp --sport $i -m conntrack --ctstate NEW -j udp_chain
 	done
-	$IPT -A FORWARD -j ACCEPT
+	#$IPT -A FORWARD -p udp -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+	$IPT -A udp_chain -j ACCEPT
 	echo "udp done"
 	echo "---------"
 }
@@ -129,6 +123,7 @@ function udp(){
 function icmp(){
 	echo "icmp types"
 	for i in $icmp_; do
+		echo "ICMP port $i allowed"
 		$IPT -A FORWARD -p icmp -m icmp --icmp-type $i -j icmp_chain
 	done
 	$IPT -A icmp_chain -j ACCEPT
